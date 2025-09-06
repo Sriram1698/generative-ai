@@ -36,21 +36,24 @@ class MultiHeadSelfAttention(nn.Module):
 
     def __init__(self, config):
         super().__init__()
+        # Checking if the embedding dimension is divisible by the number of heads
+        # There should not be any hanging dimensions
         assert config.n_embd % config.n_head == 0
 
-        # key, query, value projections for all heads
+        # Key, Query, Value projections for all heads
         self.key = nn.Linear(config.n_embd, config.n_embd)
         self.query = nn.Linear(config.n_embd, config.n_embd)
         self.value = nn.Linear(config.n_embd, config.n_embd)
 
-        # regularization
+        # Regularization
         self.attn_drop = nn.Dropout(config.attn_pdrop)
         self.resid_drop = nn.Dropout(config.resid_pdrop)
 
-        # output projection
+        # Output projection
         self.proj = nn.Linear(config.n_embd, config.n_embd)
 
-        # causal mask to ensure that attention is only applied to the left in the input sequence
+        # Causal mask to ensure that attention is only applied to the left in the input sequence
+        # Masking the future tokens (setting them to -inf) so that the model does not attend to them
         self.register_buffer(
             "mask",
             torch.tril(torch.ones(config.block_size, config.block_size)).view(
@@ -407,7 +410,7 @@ class Trainer:
         )
 
         def run_epoch(split):
-            is_train = split == "train"
+            is_train = (split == "train")
             model.train(is_train)
             data = self.train_dataset if is_train else self.test_dataset
             loader = DataLoader(
